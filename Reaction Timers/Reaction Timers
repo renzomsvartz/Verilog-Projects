@@ -1,0 +1,276 @@
+//module reactiontimercircuit (input PowerON, input Pushbutton, input Reset, input Clk102kHZ, input Clk100Hz, output reg [6:0]Digit0, output reg [6:0]Digit1);
+//	reg Q; //D flip flop
+//	reg [3:0]BCD0; //synchronous up-counter 4-bit register
+//	reg [3:0]BCD1; //synchronous up-counter 4-bit register
+//	wire EN; //wire from Q output of the D flip flip to the ENable of the synchronous 2 digit BCD up-counter
+//	
+//	wire LEDinverter; //for thorough code written about hardware on editor
+//	wire LED; //for fun
+//	
+//	
+//	/* The DFF, 3-input AND, 2-to-1 MUX, Pushbutton, and inverted Reset signal */
+//	always@(posedge Clk102kHz) begin
+//		if (!Reset && Pushbutton) begin //synchronous reset and pushbutton in simulation, although on hardware the pushbutton may violate t-set-up of the flip flop
+//			Q <= (PowerON ? 1 : Q); //if reset = 0 and pushbutton = 1 then check the PowerON. PowerON is the selecting signal to the 2-to-1 multiplixer to the 3-input AND to the D input of the D flip flop
+//		end
+//		else begin
+//			Q <= 0; //non-blocking assignment for good style not out of necessity
+//		end
+//	end //end always
+//	
+//	assign EN = Q; //readability
+//	assign LEDinverter = Q; //output of the LED inverter
+//	assign LED = LEDinverter; //LED is ON, how: by GND transistor creating a current from VDD through the current limiting resistor RL and the LED anode
+//	
+//	/*The synchronous 2-digit BCD up-counter with synchronous Reset and 7-segment display conversion*/
+//	always@(posedge Clk100Hz) begin
+//		if (Reset) begin
+//			BCD0 <= 0; //non-blocking assignment out of necessity
+//			BCD1 <= 0;
+//		end
+//	
+//		else if (EN && BCD1 != 9 && BCD0 != 9) begin //counter stops at 99
+//			if (BCD0 == 9) begin // increment both digits
+//				BCD0 <= 0; //loaded by multiplexers to the 4-bit register, enabled by a synchronous Load signal when BCD0 = 9
+//				BCD1 <= BCD1 + 1; //enabled by BCD0 = 9;
+//			end
+//			else begin
+//				BCD0 <= BCD0 + 1; //increment 1's place digit
+//			end
+//		end
+//		
+//		case(BCD0) //Digit0 7-segment display
+//			0: Digit0 = 7'b1111110;
+//			1: Digit0 = 7'b0110000;
+//			2: Digit0 = 7'b1101101;
+//			3: Digit0 = 7'b1111001;
+//			4: Digit0 = 7'b0110011;
+//			5: Digit0 = 7'b1011011;
+//			6: Digit0 = 7'b1011111;
+//			7: Digit0 = 7'b1110000;
+//			8: Digit0 = 7'b1111111;
+//			9: Digit0 = 7'b1111011;
+//			default: Digit0 = 7'bx;
+//		endcase
+//
+//		case(BCD1) //Digit1 7-segment display
+//			0: Digit1 = 7'b1111110;
+//			1: Digit1 = 7'b0110000;
+//			2: Digit1 = 7'b1101101;
+//			3: Digit1 = 7'b1111001;
+//			4: Digit1 = 7'b0110011;
+//			5: Digit1 = 7'b1011011;
+//			6: Digit1 = 7'b1011111;
+//			7: Digit1 = 7'b1110000;
+//			8: Digit1 = 7'b1111111;
+//			9: Digit1 = 7'b1111011;
+//			default: Digit1 = 7'bx;
+//		endcase
+//	end //end always
+//	
+//end 
+
+/*Using hierarchical approach (module for code converter)*/
+/*Here Digit0 and Digit1 are signals powering a 7-segment display through wires, not registers, this makes sense considering writing code for hardware*/
+//module reactiontimercircuit (input PowerON, input Pushbutton, input Reset, input Clk102kHZ, input Clk100Hz, output [6:0]Digit0, output [6:0]Digit1);
+//	reg Q;
+//	reg [3:0]BCD0; //synchronous up-counter 4-bit register
+//	reg [3:0]BCD1; //synchronous up-counter 4-bit register
+//	wire LED; //for fun
+//	
+//	
+//	/* The DFF, 3-input AND, 2-to-1 MUX, Pushbutton, and inverted Reset signal */
+//	always@(posedge Clk102kHz) begin
+//		if (!Reset && Pushbutton) begin //synchronous reset and pushbutton in simulation, although on hardware the pushbutton may violate t-set-up of the flip flop
+//			Q <= (PowerON ? 1 : Q); //if reset = 0 and pushbutton = 1 then check the PowerON. PowerON is the selecting signal to the 2-to-1 multiplixer to the 3-input AND to the D input of the D flip flop
+//		end
+//		else begin
+//			Q <= 0;
+//		end
+//	end
+//	
+//	assign LED = Q;
+//	
+//	/*The synchronous 2-digit BCD up-counter with synchronous Reset and 7-segment display conversion*/
+//	always@(posedge Clk100Hz) begin
+//		if (Reset) begin
+//			BCD0 <= 0;
+//			BCD1 <= 0;
+//		end
+//	
+//		else if (Q && BCD1 != 9 && BCD0 != 9) begin //counter stops at 99
+//			if (BCD0 == 9) begin // increment both digits
+//				BCD0 <= 0; //loaded by multiplexers to the 4-bit register, enabled by a synchronous Load signal when BCD0 = 9
+//				BCD1 <= BCD1 + 1; //enabled by BCD0 = 9;
+//			end
+//			else begin
+//				BCD0 <= BCD0 + 1; //increment 1's place digit
+//			end
+//		end
+//	end
+//	
+//	/*7-segment Display*/
+//	seg0 BCDseg7 (BCD0, Digit0);
+//	seg1 BCDseg7 (BCD1, Digit1);
+//	
+//end 
+//
+//module BCDseg7(input [3:0]BCD, output reg Digit);
+// 
+//	always@(BCD) begin
+//		case(BCD) //Digit 7-segment display
+//			0: Digit = 7'b1111110;
+//			1: Digit = 7'b0110000;
+//			2: Digit = 7'b1101101;
+//			3: Digit = 7'b1111001;
+//			4: Digit = 7'b0110011;
+//			5: Digit = 7'b1011011;
+//			6: Digit = 7'b1011111;
+//			7: Digit = 7'b1110000;
+//			8: Digit = 7'b1111111;
+//			9: Digit = 7'b1111011;
+//			default: Digit = 7'bx;
+//		endcase
+//	end
+//	
+//end 
+
+/*Using hierarchical approach (module for code converter and synchronous 2-digit BCD up-counter)*/
+/*Here Digit0 and Digit1 are signals powering a 7-segment display through wires, not registers, this makes sense considering writing code for hardware*/
+module reactiontimercircuit (input PowerON, input Pushbutton, input Reset, input Clk102kHz, input Clk100Hz, output [6:0]Digit0, output [6:0]Digit1);
+	reg Q;
+	wire [3:0]BCD0; //synchronous up-counter 4-bit wires recieve signals from registers in synchronous n-bit BCD up-counter
+	wire [3:0]BCD1; //synchronous up-counter 4-bit wires recieve signals from registers in synchronous n-bit BCD up-counter
+	
+	/* The DFF, 3-input AND, 2-to-1 MUX, Pushbutton, and inverted Reset signal */
+	always@(posedge Clk102kHz) begin
+		if (!Reset && Pushbutton) begin //synchronous reset and pushbutton in simulation, although on hardware the pushbutton may violate t-set-up of the flip flop
+			Q <= (PowerON ? 1 : Q); //if reset = 0 and pushbutton = 1 then check the PowerON. PowerON is the selecting signal to the 2-to-1 multiplixer to the 3-input AND to the D input of the D flip flop
+		end
+		else begin
+			Q <= 0;
+		end
+	end
+	
+	/*BCD Counter*/
+	synchronous2digitBCDupcounter bcdcounter (Clk100Hz, Q, Reset, BCD0, BCD1);
+	
+	/*7-segment Display*/
+	BCDseg7 seg0 (BCD0, Digit0);
+	BCDseg7 seg1 (BCD1, Digit1);
+	
+endmodule 
+
+module synchronous2digitBCDupcounter(input Clk, input EN, input Reset, output reg [3:0]BCD0, output reg [3:0]BCD1); //cannot make n-bit BCD counters
+	
+	always@(posedge Clk) begin
+		if (Reset) begin
+			BCD0 <= 0;
+			BCD1 <= 0;
+		end
+	
+		else if (EN && BCD1 != 9 || BCD0 != 9) begin //counter stops at 99
+			if (BCD0 == 9) begin // increment both digits
+				BCD0 <= 0; //loaded by multiplexers to the 4-bit register, enabled by a synchronous Load signal when BCD0 = 9
+				BCD1 <= BCD1 + 1; //enabled by BCD0 = 9;
+			end
+			else begin
+				BCD0 <= BCD0 + 1; //increment 1's place digit
+			end
+		end
+	end
+
+endmodule
+
+module BCDseg7(input [3:0]BCD, output reg Digit);
+ 
+	always@(BCD) begin
+		case(BCD) //Digit 7-segment display
+			0: Digit = 7'b1111110;
+			1: Digit = 7'b0110000;
+			2: Digit = 7'b1101101;
+			3: Digit = 7'b1111001;
+			4: Digit = 7'b0110011;
+			5: Digit = 7'b1011011;
+			6: Digit = 7'b1011111;
+			7: Digit = 7'b1110000;
+			8: Digit = 7'b1111111;
+			9: Digit = 7'b1111011;
+			default: Digit = 7'bx;
+		endcase
+	end
+	
+endmodule
+
+/*Using task for code converter and BCD Counter*/ //not sure what that does hardware or bigpicture wise
+//module reactiontimercircuit (input PowerON, input Pushbutton, input Reset, input Clk102kHZ, input Clk100Hz, output [6:0]Digit0, output [6:0]Digit1);
+//	reg Q;
+//	wire [3:0]BCD0; //synchronous up-counter 4-bit wires recieve signals from registers in synchronous n-bit BCD up-counter
+//	wire [3:0]BCD1; //synchronous up-counter 4-bit wires recieve signals from registers in synchronous n-bit BCD up-counter
+//	
+//	/* The DFF, 3-input AND, 2-to-1 MUX, Pushbutton, and inverted Reset signal */
+//	always@(posedge Clk102kHz) begin
+//		if (!Reset && Pushbutton) begin //synchronous reset and pushbutton in simulation, although on hardware the pushbutton may violate t-set-up of the flip flop
+//			Q <= (PowerON ? 1 : Q); //if reset = 0 and pushbutton = 1 then check the PowerON. PowerON is the selecting signal to the 2-to-1 multiplixer to the 3-input AND to the D input of the D flip flop
+//		end
+//		else begin
+//			Q <= 0;
+//		end
+//	end
+//	
+//	task BCD7seg; //can I write task BCD7seg (input... output...);? Yes, right?
+//		input [3:0]BCD; //can I write input [3:0]BCD, output reg Digit; no, right? commas dont work here like C, right?
+//		output reg Digit;
+// 
+//		always@(BCD) begin
+//			case(BCD) //Digit 7-segment display
+//				0: Digit = 7'b1111110;
+//				1: Digit = 7'b0110000;
+//				2: Digit = 7'b1101101;
+//				3: Digit = 7'b1111001;
+//				4: Digit = 7'b0110011;
+//				5: Digit = 7'b1011011;
+//				6: Digit = 7'b1011111;
+//				7: Digit = 7'b1110000;
+//				8: Digit = 7'b1111111;
+//				9: Digit = 7'b1111011;
+//				default: Digit = 7'bx;
+//			endcase
+//		end
+//	
+//	endtask 
+//	
+//	task BCDCounter;
+//		input Clk;
+//		input EN;
+//		input Reset;
+//		output reg [3:0]bcd_signals_out0;
+//		output reg [3:0]bcd_signals_out1);
+//	
+//		always@(posedege Clk) begin
+//			if (Reset) begin
+//				BCD0 <= 0;
+//				BCD1 <= 0;
+//			end
+//		
+//			else if (EN && BCD1 != 9 && BCD0 != 9) begin //counter stops at 99
+//				if (BCD0 == 9) begin // increment both digits
+//					BCD0 <= 0; //loaded by multiplexers to the 4-bit register, enabled by a synchronous Load signal when BCD0 = 9
+//					BCD1 <= BCD1 + 1; //enabled by BCD0 = 9;
+//				end
+//				else begin
+//					BCD0 <= BCD0 + 1; //increment 1's place digit
+//				end
+//			end
+//		end
+//	endtask
+//	
+//	/*BCD Counter*/
+//	BCDCounter (Clk100Hz, Q, Reset, BCD0, BCD1);
+//	
+//	/*7-segment Display*/
+//	BCDseg7 (BCD0, Digit0);
+//	BCDseg7 (BCD1, Digit1);
+//	
+//end 
+
