@@ -1,0 +1,57 @@
+module BCD_Subtractor_4_SE(input [3:0]X, input [3:0]Y, input SignofX, input SignofY, output reg [3:0]result_S0, output reg [3:0]result_S1, output reg Signbit, output reg overflow);
+	wire [3:0]result_NmP_0;
+	wire [3:0]result_NmP_1;
+	BCD_Adder negminuspositive (X, Y, result_NmP_0, result_NmP_1);
+	always@(*)
+		begin
+			overflow = (X > 9 | Y > 9) ? 1 : 0;
+			if (SignofX & ~SignofY)
+				begin
+					result_S0 = result_NmP_0;
+					result_S1 = result_NmP_1;
+					Signbit = 1'b1;
+				end
+			else if (~SignofX & SignofY)
+				begin
+					result_S0 = result_NmP_0;
+					result_S1 = result_NmP_1;
+					Signbit = 1'b0;
+				end
+			else if (~SignofX & ~SignofY) //-
+				begin
+					if (X >= Y)
+						begin
+							result_S0 = X - Y;
+							result_S1 = 0;
+							Signbit = 1'b0;
+						end
+					else if (X < Y)
+						begin
+							result_S0 = Y - X;
+							result_S1 = 0;
+							Signbit = 1'b1;
+						end
+				end
+			else if (SignofX & SignofY)
+				begin
+					if (X >= Y)//
+						begin
+							result_S0 = X - Y;
+							result_S1 = 0;
+							Signbit = 1'b1;
+						end
+					else if (X < Y)
+						begin
+							result_S0 = Y - X;
+							result_S1 = 0;
+							Signbit = 1'b0;
+						end
+				end
+		end
+endmodule
+module BCD_Adder(input [3:0]X, input [3:0]Y, output wire [3:0]S, output wire carry);	
+	wire [4:0]result;
+	assign result = X + Y;
+	assign carry = (result >= 10);
+	assign S = result % 10;
+endmodule 
