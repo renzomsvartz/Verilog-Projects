@@ -1,0 +1,90 @@
+module BCD_Subtractor_3(input [3:0]X, input [3:0]Y, input SignofX, input SignofY, output reg [3:0]result_S0, output reg [3:0]result_S1, output reg Signbit, output reg overflow);
+	wire [3:0]result_NmP_0;
+	wire [3:0]result_NmP_1;
+	BCD_Adder negminuspositive (X, Y, result_NmP_0, result_NmP_1);
+	always@(*)
+		begin
+			overflow = (X > 9 | Y > 9) ? 1 : 0;
+			if (SignofX & ~SignofY)
+				begin
+					result_S0 = result_NmP_0;
+					result_S1 = result_NmP_1;
+					Signbit = 1'b1;
+				end
+			else if (~SignofX & SignofY)
+				begin
+					result_S0 = result_NmP_0;
+					result_S1 = result_NmP_1;
+					Signbit = 1'b0;
+				end
+			else if (~SignofX & ~SignofY) //-
+				begin
+					if (X > Y)
+						begin
+							result_S0 = X - Y;
+							result_S1 = 0;
+							Signbit = 1'b0;
+						end
+					else if (X < Y)
+						begin
+							result_S0 = Y - X;
+							result_S1 = 0;
+							Signbit = 1'b1;
+						end
+				end
+			else if (SignofX & SignofY)
+				begin
+					if (X > Y)//
+						begin
+							result_S0 = X - Y;
+							result_S1 = 0;
+							Signbit = 1'b1;
+						end
+					else if (X < Y)
+						begin
+							result_S0 = Y - X;
+							result_S1 = 0;
+							Signbit = 1'b0;
+						end
+				end
+		end
+endmodule 
+
+module BCD_Adder(input [3:0]X, input [3:0]Y, output reg [3:0]S, output reg carry);	
+	always@(*)
+		begin
+			S = X + Y; //3 + 5 8 
+			if (S >= 10) //>=10
+				begin
+					{carry, S} = S + 6;
+				end
+			else if(S < 10)
+				begin
+					carry = 1'b0;
+				end
+		end
+endmodule 
+module Comparator(input [3:0]X, input [3:0]Y, output Result); //X >= Y (0) or X < Y (1)
+	reg [4:0]Yt;
+	reg [4:0]cX;
+	reg [4:0]cY;
+	reg [4:0]S;
+	reg [5:0]c;
+	integer i;
+	always@(*)
+	begin
+		cX = X;
+		cY = Y;
+		Yt = ~cY;
+		c[0] = 1'b1;
+		for (i = 0; i < 4; i = i + 1)
+		begin
+			S[i] = cX[i] + Yt[i] + c[i];
+			c[i+1] = ((cX[i] & Yt[i]) | (cX[i] & c[i]) | (Yt[i] & c[i]));
+		end
+	end
+	assign O = c[5] ^ c[4];
+	assign Z = !S;
+	assign N = S[4];
+	assign Result = O ^ N;
+endmodule 
