@@ -1,0 +1,51 @@
+module Hardcoded_Multiplier(x, y, product, CANNOTMULTIPLYBYNEGATIVEEIGHT);
+	parameter n = 4;
+	input [n-1:0]x;
+	input [n-1:0]y;
+	wire [n-1:0]xT;
+	wire [n-1:0]yT;
+	wire [n-1:0]xt;
+	wire [n-1:0]yt;
+	wire [n-1:0]firstANDs;
+	wire [n-1:0]secondANDs;
+	wire [n-1:0]thirdANDs;
+	wire [n-1:0]fourthANDs;
+	wire [n+1:0]efirstANDs;
+	wire [n+1:0]esecondANDs;
+	wire [n+2:0]ethirdANDs;
+	wire [n+3:0]efourthANDs;
+	wire [n+1:0]sumFirstSecond;
+	wire [n+2:0]esumFirstSecond;
+	wire [n+2:0]sumFirstSecondThird;
+	wire [n+3:0]esumFirstSecondThird;
+	wire [n+3:0]sumFirstSecondThirdFourth;	
+	output [(2*n)-1:0]product;
+	output CANNOTMULTIPLYBYNEGATIVEEIGHT;
+	integer i, j;
+		
+		assign xT = {{!x[3]}, {!x[2]}, {!x[1]}, {!x[0]}};
+		assign yT = {{!y[3]}, {!y[2]}, {!y[1]}, {!y[0]}};
+		assign xt = xT + 1;
+		assign yt = yT + 1;
+		
+		assign firstANDs = (x[3] == 0) ? {{(x[0] & y[3])}, {(x[0] & y[2])}, {(x[0] & y[1])}, {(x[0] & y[0])}} : {{(xt[0] & yt[3])}, {(xt[0] & yt[2])}, {(xt[0] & yt[1])}, {(xt[0] & yt[0])}}; //expected 0000 //perform x0 & y0-y3
+		assign secondANDs = (x[3] == 0) ? {{(x[1] & y[3])}, {(x[1] & y[2])}, {(x[1] & y[1])}, {(x[1] & y[0])}} : {{(xt[1] & yt[3])}, {(xt[1] & yt[2])}, {(xt[1] & yt[1])}, {(xt[1] & yt[0])}}; //1001 //perform x1 & y0-y3
+		assign thirdANDs = (x[3] == 0) ? {{(x[2] & y[3])}, {(x[2] & y[2])}, {(x[2] & y[1])}, {(x[2] & y[0])}} : {{(xt[2] & yt[3])}, {(xt[2] & yt[2])}, {(xt[2] & yt[1])}, {(xt[2] & yt[0])}}; //0000 //perform x2 & y0-y3
+		assign fourthANDs = (x[3] == 0) ? {{(x[3] & y[3])}, {(x[3] & y[2])}, {(x[3] & y[1])}, {(x[3] & y[0])}} : {{(xt[3] & yt[3])}, {(xt[3] & yt[2])}, {(xt[3] & yt[1])}, {(xt[3] & yt[0])}}; //0000 //perform x3 & y0-y3
+			
+		assign efirstANDs = (x[3] == 0) ? {{(x[0] & y[3])}, {(x[0] & y[3])}, firstANDs} : {{(xt[0] & yt[3])}, {(xt[0] & yt[3])}, firstANDs}; //000000 -- //these perform sign extension and left shift them for addition
+		assign esecondANDs = (x[3] == 0) ? {{(x[1] & y[3])}, secondANDs, 1'b0} : {{(xt[1] & yt[3])}, secondANDs, 1'b0}; //110010 -- //1001 into 110010
+		assign ethirdANDs = (x[3] == 0) ? {{(x[2] & y[3])}, thirdANDs,1'b0,1'b0} : {{(xt[2] & yt[3])}, thirdANDs,1'b0,1'b0}; //0000000 -- //0000 into 0000000
+		assign efourthANDs = (x[3] == 0) ? {{(x[3] & y[3])}, fourthANDs,1'b0,1'b0,1'b0} : {{(xt[3] & yt[3])}, fourthANDs,1'b0,1'b0,1'b0};//00000000 --  //0000 into 00000000
+			
+		assign sumFirstSecond = esecondANDs + efirstANDs; //110010 -- 110010 + 000000
+		assign esumFirstSecond = {{sumFirstSecond[n+1]}, sumFirstSecond}; //1110010 --  1 110010
+		assign sumFirstSecondThird = ethirdANDs + esumFirstSecond; //1110010 -- 1110010 + 0000000
+		assign esumFirstSecondThird = {{sumFirstSecondThird[n+2]}, sumFirstSecondThird}; //11110010 -- 1 1110010 
+		assign sumFirstSecondThirdFourth = efourthANDs + esumFirstSecondThird; //11110010 --- 11110010 + 00000000
+		
+		assign product = sumFirstSecondThirdFourth; //expected 11110010 -- actual 000100100
+		
+		assign CANNOTMULTIPLYBYNEGATIVEEIGHT = x[3] & ~x[2] & ~x[1] & ~x[0];
+
+endmodule 
