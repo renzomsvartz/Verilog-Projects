@@ -1,0 +1,198 @@
+/*Adder/Sub Assignment Statements*/
+//module NAS(input addsub_Control, input [n-1:0]x, input [n-1:0]y, output reg [n:0]s, output cout, output overflow);
+//	parameter n = 4;
+//	reg [n-1:0]y_2sCompliment;
+//	reg [n:0]carrybits;
+//	integer i;
+//	
+//	assign carrybits[0] = addsub_Control;
+//	assign y_2sCompliment = (addsub_Control == 1'b1) ? ~y : y;
+//
+//	always@(*)
+//		begin
+//			for(i = 0; i < n; i = i + 1)
+//			begin
+//				s[i] = x[i] + y_2sCompliment[i] + carrybits[i];
+//				carrybits[i+1] = (x[i] & y_2sCompliment[i]) | (x[i] & carrybits[i]) | (y_2sCompliment[i] & carrybits[i]);
+//			end
+//		
+//		end
+//	
+//	assign cout = carrybits[n];
+//	assign overflow = (x[n-1] & y_2sCompliment[n-1] & ~s[n-1]) | (~x[n-1] & ~y_2sCompliment[n-1] & s[n-1]) | (carrybits[n-1] ^ carrybits[n]);
+//	
+//endmodule 
+/*Adder/Sub Assignment Statements*/
+
+
+
+
+/*Adder/Sub Generate Statements*/
+//module NAS(input addsub_Control, input [n-1:0]x, input [n-1:0]y, output reg [n:0]s, output cout, output overflow);
+//	parameter n = 4;
+//	reg [n-1:0]y_2sCompliment;
+//	wire [n:0]carrybits;
+//	genvar i;
+//
+//	assign carrybits[0] = addsub_Control;
+//	assign y_2sCompliment = (addsub_Control == 1'b1) ? ~y : y;
+//	
+//	generate
+//		for(i = 0; i < n; i = i + 1)
+//			begin:full_adder_generations
+//				FA full_adder_generation (carrybits[i], x[i], y_2sCompliment[i], s[i], carrybits[i+1]);
+//			end	
+//	endgenerate
+//	
+//	assign cout = carrybits[i];
+//	assign overflow = (x[n-1] & y_2sCompliment[n-1] & ~s[n-1]) | (~x[n-1] & ~y_2sCompliment[n-1] & s[n-1]) | (carrybits[n] ^ carrybits[n-1]);
+//	
+//endmodule
+/*Adder/Sub Generate Statements*/
+
+
+
+
+/*Module FA*/
+//module FA(input cin, input x, input y, output s, outputcout);
+//	assign s = ((x ^ y) ^ cin);
+//	assign cout = ((x & y) | (x & cin) | (y & cin));
+//	
+//endmodule
+/*Module FA*/
+
+
+
+
+/*CLA idea*/
+//module P8 (input addsub_Control, input x, input y, output s, output cout)
+//	parameter n = 8
+//	
+// assign carrybits[0] = addsub_Control;
+//
+//	assign s[i] = x[i] ^ y[i] ^ carrybits[i];
+//	assign g[i] = X[i] & Y[i]; //generate function
+//	assign p[i] = X[i] | Y[i]; //propogate function. produces a carry bit (1) if the "carrybits[i-1]" from the past bit is 1. "carrybit[i-1]" representing all the combinational logic of carrybit[i-1] such as g1p0.
+//	assign carrybits[i+1] = g[i] | p[i] & carrybits[i]; 
+//	
+//	//below is CLA idea
+//
+//	for (i = 0; i < n; i = i + 1)
+//		assign *carrybit[i+1] = g[i] | p[i] & (*carrybit[i]);
+		//s.t. carrybits[0] is addsub_Control
+		//carrybits[1]: g[0] | p[0] & carrybits[0]
+		//carrybits[2]: g[1] | p[1] & (g[0] | p[0] & carrybits[0]) == g[1] | p[1] & carrybits[1]
+		//carrybits[3]: g[2] | p[2] &  (g[1] | p[1] & (g[0] | p[0] & carrybits[0])) == g[2] | p[2] & carrybits[2]
+/*CLA idea*/
+
+
+
+
+/*Hardcode CLAS*/
+//module CLAS(input add_subControl, input[7:0]x, input[7:0]y, output [7:0]s, output cout);
+//	wire [8:0]carrybits;
+//	wire[7:0]g; //generate function
+// wire [7:0]p; //propogate function
+//	reg [7:0]y_2sComplement;
+//	
+//	assign carrybits[0] = addsub_Control;
+//	
+//	always@(yi, add_sub)
+//		begin
+//			y_2sComplement = (addsub_Control == 1'b1) ? ~y : y;
+//		end
+//	
+//	assign g[0] = x[0] & y_2sComplement[0];
+//	assign p[0] = x[0] | y_2sComplement[0];
+//	assign s[0] = x[0] ^ y_2sComplement[0] ^ carrybits[0];
+//	assign carrybits[1] = g[0] | (p[0] & carrybits[0]);
+//	
+//	assign g[1] = x[1] & y_2sComplement[1];
+//	assign p[1] = x[1] | y_2sComplement[1];
+//	assign s[1] = x[1] ^ y_2sComplement[1] ^ carrybits[1];
+//	assign carrybits[2] = g[1] | (p[1] & (g[0] | (p[0] & carrybits[0])));
+//	
+//	assign g[2] = x[2] & y_2sComplement[2];
+//	assign p[2] = x[2] | y_2sComplement[2];
+//	assign s[2] = x[2] ^ y_2sComplement[2] ^ carrybits[2];
+//	assign carrybits[3] = g[2] | (p[2] & (g[1] | (p[1] & (g[0] | (p[0] & carrybits[0])))));
+//	
+//	assign g[3] = x[3] & y_2sComplement[3];
+//	assign p[3] = x[3] | y_2sComplement[3];
+//	assign s[3] = x[3] ^ y_2sComplement[3] ^ carrybits[3];
+//	assign carrybits[4] = g[3] | (p[3] & (g[2] | (p[2] & (g[1] | (p[1] & (g[0] | (p[0] & carrybits[0])))))));
+//	
+//	assign g[4] = x[4] & y_2sComplement[4];
+//	assign p[4] = x[4] | y_2sComplement[4];
+//	assign s[4] = x[4] ^ y_2sComplement[4] ^ carrybits[4];
+//	assign carrybits[5] = g[4] | (p[4] & (g[3] | (p[3] & (g[2] | (p[2] & (g[1] | (p[1] & (g[0] | (p[0] & carrybits[0])))))))));
+//
+//	assign g[5] = x[5] & y_2sComplement[5];
+//	assign p[5] = x[5] | y_2sComplement[5];
+//	assign s[5] = x[5] ^ y_2sComplement[5] ^ carrybits[5];
+//	assign carrybits[6] = g[5] | (p[5] & (g[4] | (p[4] & (g[3] | (p[3] & (g[2] | (p[2] & (g[1] | (p[1] & (g[0] | (p[0] & carrybits[0])))))))))));
+//	
+//	assign g[6] = x[6] & y_2sComplement[6];
+//	assign p[6] = x[6] | y_2sComplement[6];
+//	assign s[6] = x[6] ^ y_2sComplement[6] ^ carrybits[6];
+//	assign carrybits[7] = g[6] | (p[6] & (g[5] | (p[5] & (g[4] | (p[4] & (g[3] | (p[3] & (g[2] | (p[2] & (g[1] | (p[1] & (g[0] | (p[0] & carrybits[0])))))))))))));
+//	
+//	assign g[7] = x[7] & y_2sComplement[7];
+//	assign p[7] = x[7] | y_2sComplement[7];
+//	assign s[7] = x[7] ^ y_2sComplement[7] ^ carrybits[7];
+//	assign carrybits[8] = g[7] | (p[7] & (g[6] | (p[6] & (g[5] | (p[5] & (g[4] | (p[4] & (g[3] | (p[3] & (g[2] | (p[2] & (g[1] | (p[1] & (g[0] | (p[0] & carrybits[0])))))))))))))));
+//
+// //assign c[8] = g[7] | p[7] //here is the inspiration of my question
+//
+//	assign carryout = carrybits[8];
+//	
+//endmodule
+/*Hardcode CLAS*/
+
+module Lab5_Carry_Lookahead_Adder(input[3:0]x, input[3:0]y, input cin, output [3:0]s, output cout, output overflow);
+	wire [4:0]carry;
+	wire [3:0]g; //generate function
+	wire [3:0]p; //propogate function
+	
+	assign carry[0] = cin;
+	
+	assign g = x & y;
+	assign p = x | y;
+	assign s = x ^ y ^ carry;
+	assign carry[1] = g[0] | (p[0] & carry[0]);
+	
+	assign carry[2] = g[1] | (p[1] & (g[0] | (p[0] & carry[0])));
+	
+	assign carry[3] = g[2] | (p[2] & (g[1] | (p[1] & (g[0] | (p[0] & carry[0])))));
+
+	assign carry[4] = g[3] | (p[3] & (g[2] | (p[2] & (g[1] | (p[1] & (g[0] | (p[0] & carry[0])))))));
+
+	assign cout = carry[4];
+	assign overflow = carry[4] ^ carry[3];
+	
+endmodule
+
+/*	assign carry[0] = cin;
+	
+	assign g = x & y;
+	assign p = x | y;
+	assign s = x[0] ^ y[0] ^ carrybits[0];
+	assign carry[1] = g[0] | (p[0] & carry[0]);
+	
+	assign s[1] = x[1] ^ y_2sComplement[1] ^ carrybits[1];
+	assign carry[2] = g[1] | (p[1] & (g[0] | (p[0] & carry[0])));
+	
+	assign s[2] = x[2] ^ y_2sComplement[2] ^ carrybits[2];
+	assign carry[3] = g[2] | (p[2] & (g[1] | (p[1] & (g[0] | (p[0] & carry[0])))));
+
+	assign s[3] = x[3] ^ y_2sComplement[3] ^ carrybits[3];
+	assign carry[4] = g[3] | (p[3] & (g[2] | (p[2] & (g[1] | (p[1] & (g[0] | (p[0] & carry[0])))))));
+
+	assign cout = carry[4];*/
+
+//fixed-point-representation arithmetic
+
+//no driver warning at width [p:0] -- The "no driver" isn't too bad as this means you've allocated a width for your result that is too large. I would use parameters or localparams to set widths properly.
+//Latches The signal path through a particular group of gates could take longer than another group, causing the set output to go active for a brief moment before the output settles down into the final state.
+//If we switch from an SR-Latch to an SR-FF, clocked off the same clock that the counter is, then the SR-FF will wait for one whole clock cycle before changing state. In essence it will wait for the set signal to settle before looking at it.
+//https://electronics.stackexchange.com/questions/38645/why-are-inferred-latches-bad
