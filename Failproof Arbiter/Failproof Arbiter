@@ -1,0 +1,105 @@
+module Exercise6_38(input Clock, input Resetn, input r1, input r2, input r3, output g1, output g2, output g3, output reg[1:0]Arbiter_state, output reg[1:0]gnt3assurance, output reg request1, output reg request2); 
+	parameter [1:0] Idle = 2'b00, gnt1 = 2'b01, gnt2 = 2'b10, gnt3 = 2'b11;
+	
+	//Sequential circuit
+	always@(posedge Clock, negedge Resetn)
+	begin
+		if (!Resetn)
+		begin
+			gnt3assurance <= 2'b00;
+			Arbiter_state <= Idle;
+		end
+		
+		else
+		begin
+			if (!r3) gnt3assurance <= 2'b00;
+			
+			casex(Arbiter_state)
+				Idle:
+				begin
+					request1 = ~&gnt3assurance & r1;
+					request2 = ~&gnt3assurance & r2;
+				
+					casex({request1, request2, r3})
+						3'b1xx:
+						begin
+							Arbiter_state <= gnt1;
+							gnt3assurance[1] <= r3;
+						end
+						
+						3'b01x:
+						begin
+							Arbiter_state <= gnt2;
+							gnt3assurance[0] <= r3;
+						end
+						
+						3'b001:
+						begin
+							Arbiter_state <= gnt3;
+							gnt3assurance <= 2'b00; 
+						end
+						
+						default:
+						begin
+							Arbiter_state <= Idle;
+						end
+					endcase
+				end
+				
+				gnt1:
+				begin
+					casex({r1, r2, r3})
+						3'b1xx:
+						begin
+							Arbiter_state <= gnt1;
+							gnt3assurance[1] <= r3;
+						end
+
+						3'b0xx:
+						begin
+							Arbiter_state <= Idle;
+						end
+					endcase
+				end
+				
+				2'b10:
+				begin
+					casex({r1, r2, r3})
+						3'bx1x:
+						begin
+							Arbiter_state <= gnt2;
+							gnt3assurance[0] <= r3;
+						end
+						
+						3'bx0x:
+						begin
+							Arbiter_state <= Idle;
+						end
+					endcase
+				end
+				
+				2'b11:
+				begin
+					casex({r1, r2, r3})
+						3'bxx1:
+						begin
+							Arbiter_state <= gnt3;
+							gnt3assurance <= 2'b00;
+						end
+						
+						3'bxx0:
+						begin
+							Arbiter_state <= Idle;
+						end
+					endcase
+				end
+			endcase
+		end
+	end
+	
+	//Output
+	assign g1 = (Arbiter_state == gnt1);
+	assign g2 = (Arbiter_state == gnt2);
+	assign g3 = (Arbiter_state == gnt3);
+
+endmodule
