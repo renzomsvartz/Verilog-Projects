@@ -1,0 +1,188 @@
+/*Procedural statement logic gate assignment statements and carry out vector*/
+//module NA(input cin, input [n-1:0]x, input [n-1:0]y, output reg [n-1:0]s, output reg cout);
+//	parameter n = 32;
+//	reg [n:0]carrybits;
+//	integer k;
+//	
+//	always @ (x, y, carrybits, cin)
+//	begin
+//		carrybits[0] = cin;
+//		for(k = 0; k < n; k = k+1)
+//		begin
+//			s[k] = x[k] ^ y[k] ^ carrybits[k];
+//			carrybits[k+1] = (x[k]+y[k]) & carrybits[k];
+//		end //end addition of two vectors and carry out vector
+//		cout = carrybits[n];
+//	end
+//	
+//endmodule 
+/*Procedural statement logic gate assignment statements and carry out vector*/
+
+
+
+
+/*Generate for module instantiation*/
+//module NA(input cin, input [n-1:0]x, input [n-1:0]y, output [n-1:0]s, output cout);
+//	parameter n = 32;
+//	wire [n:0]carrybits;
+//	genvar i;
+//	
+//	assign carrybits[0] = carryin;
+//	generate
+//		for(i = 0; i < n; i = i +1)
+//		begin:addsum
+//			FA stage(carrybits[i], x[i], y[i], s[i], carrybits[i+1]);
+//		end
+//	endgenerate
+//	assign cout = carrybits[n];
+//
+//endmodule 
+//
+//module FA(input cin, input x, input y, output s, output cout);
+//	assign s = x ^ y ^ cin;
+//	assign cout = (x & y) ^ cin;
+//
+//endmodule 
+/*Generate for module instantiation*/
+
+
+
+
+/*Arithmetic assignment statements*/
+//module NA(input cin, input [n-1:0]x, input [n-1:0]y, output s);
+//	parameter n = 32;
+//	assign s = x + y + cin; //net type output [n-1:0]s 
+	//always @ (x,y,cin)
+		//s = x + y + cin; //variable type output reg [n-1:0]s
+//endmodule
+/*Arithmetic assignment statements*/
+
+
+
+
+/*Arithmetic assignment statements. Carryout and overflow by intuitive means*/
+//module NA(input cin, input [n-1:0]x, input [n-1:0]y, output reg [n-1:0]s, output reg cout, output reg overflow);
+//	parameter n = 32;
+//	always @ (x, y, cin)
+//	begin
+//		s = x + y + cin;
+//		carryout = (x[n-1] & ~s[n-1]) | (y[n-1] & ~s[n-1]) | (x[n-1] & y[n-1]); //accessless to carrybits. carryout can be intuitively found by noting that if s is 0 and either x or y are 1, then carryout is 1.
+//		overflow = (x[n-1] & y[n-1] & ~s[n-1]) | (~x[n-1] & ~y[n-1] & s[n-1]); //accessless to carrybits. overflow can be intuitively found by noting that x and y are the same sign and the s sign is different.
+//	end
+//
+//endmodule 
+/*Arithmetic assignment statements. Carryout and overflow by intuitive means*/
+
+
+
+
+/*Sign extension and bit selectivity in vector assignment*/
+//module NA(input cin, input [n-1:0]x, input [n-1:0]y, output reg [n-1:0]s, output reg cout, output reg overflow);
+//	parameter n = 32; 
+//	reg sumbits[n:0];
+//	
+//	always @ (x, y, carryin)
+//		begin
+//			sumbits = {1'b0, x} + {1'b0, y} + carryin;
+//			s = sumbits[n-1:0];
+//			carryout = sumbits[n];
+//			overflow = (x[n-1] & y[n-1] & ~s[n-1]) | (~x[n-1] & ~y[n-1] & s[n-1]);
+//		end
+//
+//endmodule 
+/*Sign extension and bit selectivity in vector assignment*/
+
+
+
+
+/*Concatenation*/
+//module NA(input cin, input [n-1:0]x, input [n-1:0]y, output reg [n-1:0]s, output reg cout, output reg overflow);
+//	parameter n = 32;
+//	
+//	always @ (x, y, cin)
+//		begin
+//			{cout, s} = x + y + cin;
+//			overflow = (x[n-1] & y[n-1] & ~s[n-1]) | (~x[n-1] & ~y[n-1] & s[n-1]);
+//		end
+//
+//endmodule 
+/*Concatenation*/
+
+
+
+
+/*Module FA*/
+//module FA(input cin, input x, input y, output reg s, output reg cout)
+//	always @ (x, y, cin)
+//	begin
+//		{cout,s} =  x + y + cin;
+//	end
+//
+//endmodule
+/*Module FA*/
+
+
+
+
+/*Module NA*/
+//module NA(input carryin, input [n-1:0]x, input [n-1:0]y, output reg [n-1:0]s, output reg carryout, output reg overflow);
+//	parameter n = 32;
+//	
+//	always @ (x, y, carryin)
+//		begin
+//			{carryout, s} = x + y + carryin;
+//			overflow = (x[n-1] & y[n-1] & ~s[n-1]) | (~x[n-1] & ~y[n-1] & s[n-1]);
+//		end
+//		
+//endmodule 
+/*Module NA*/
+
+
+
+
+/*Module PA*/
+//module PA(input [3:0]x, input [3:0]y, output [4:0]s, output overflow);
+//	NA xplusy (1'b0, x, y, s[3:0], s[4], overflow); //call to NA named xplusy
+//	defparam xplusy.n = 4; //defparam
+//	
+//endmodule
+/*Module PA*/
+
+
+
+
+/*Module PA*/
+//module PA(input [3:0]x, input [3:0]y, output [4:0]s, output overflow);
+//	NA#(4) xplusy (1'b0, x, y, s[3:0], s[4], overflow); //call to NA#(4) named xplusy
+//	
+//endmodule
+/*Module PA*/
+
+
+
+
+/*Module PA*/
+//module PA(input [3:0]x, input [3:0]y, output [4:0]s, output overflow);
+//	NA#(.n(4))xplusy //call to NA#(.n(4)) named xplusy
+//	(
+//		.cin(1'b0),
+//		.x(x),
+//		.y(y),
+//		.s(s[3:0]),
+//		.cout(s[4]),
+//		.overflow(overflow)
+//	);
+//	
+//endmodule
+/*Module PA*/
+
+
+
+
+/*Number representation*/
+//Padding, ignoring, and size allocation is done by the compiler
+//-4'b101 
+//12'b0000_0000_0000
+//4{B[3]} Repitition
+//{4{B[3], B} Concatenation
+/*Number representation*/
