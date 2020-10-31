@@ -1,0 +1,17 @@
+module BCD(Cin, X, Y , Z, Cout)
+	input Cin; //why is this even here. Answer: to build a larger BCD adder like a ripple carry adder consists of full adders who pass Cout between them.
+	input [3:0]X;
+	input [3:0]Y;
+	output [4:0]Z;
+	output Cout;
+	
+	always@(X,Y,Cin)
+	begin
+		Z = X + Y + Cin;
+		if ( Z < 10)
+			{Cout, Z} = Z;
+		else if (Z > 10)
+			{Cout, Z} = Z + 6;
+	end
+	
+endmodule 
