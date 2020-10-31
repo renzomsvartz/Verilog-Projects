@@ -1,0 +1,128 @@
+module BCD_Subtractor_ndigits(input [3:0]X0, input [3:0]Y0, input [3:0]X1, input [3:0]Y1, input SignofX, input SignofY, output reg [3:0]result_S0, output reg [3:0]result_S1, output reg [3:0]result_S2, output reg Signbit, output reg overflow);
+	reg [3:0]nY1;
+	reg [3:0]nY0;
+	reg [3:0]NnY1;
+	reg [3:0]NnY0;
+	reg [3:0]NX1;
+	reg [3:0]NX0;
+	wire [3:0]nY0_plus1;
+	wire [3:0]carry_to_nY1;
+	wire [3:0]nY1_plus1;
+	wire [3:0]S2;
+	wire [3:0]result_pmp0;
+	wire [3:0]carry_to_nY1_plus1_plusX1;
+	wire [3:0]result_pmp1;
+	wire [3:0]carry_to_S2;
+	wire [3:0]useless1;
+	wire [3:0]NnY0_plus1;
+	wire [3:0]Ncarry_to_nY1;
+	wire [3:0]NnY1_plus1;
+	wire [3:0]NS2;
+	wire [3:0]Nresult_pmp0;
+	wire [3:0]Ncarry_to_nY1_plus1_plusX1;
+	wire [3:0]Nresult_pmp1;
+	wire [3:0]Ncarry_to_S2;
+	wire [3:0]Nuseless1;
+	wire [3:0]Y0_plusX0;
+	wire [3:0]carry_to_S1;
+	wire [3:0]Y1_plusX1;
+	wire [3:0]carry_to_s2;
+	wire [3:0]result_s2;
+	wire [3:0]useless2; //declare wires
+	always@(*) //overflow and 99 - Y1Y0 (9's compliment)
+		begin
+			overflow = X1 > 9 | X0 > 9 | Y1 > 9 | Y0 > 9;
+			nY1 = 9 - Y1; //9 - Y
+			nY0 = 9 - Y0; //9 - Y
+			
+			NnY1 = 9 - X1; //flipped X and Y
+			NnY0 = 9 - X0;
+			NX1 = Y1;
+			NX0 = Y0;
+		end
+		
+	//Positive number - positive number	
+	BCD_Adder b1 (nY0, 1'b1, 1'b0, nY0_plus1, carry_to_nY1); //+1 RCA
+	BCD_Adder b1_2 (nY1, 1'b0, carry_to_nY1, nY1_plus1, S2); //+1 RCA
+	BCD_Adder b1_3 (nY0_plus1, X0, 1'b0, result_pmp0, carry_to_nY1_plus1_plusX1); //+A RCA
+	BCD_Adder b1_4 (nY1_plus1, X1, carry_to_nY1_plus1_plusX1, result_pmp1, carry_to_S2); //+A RCA 
+	BCD_Adder b1_5 (S2, 1'b0, carry_to_S2, result_pmp2, useless1); //+A RCA
+	//Negative number - negative number
+	BCD_Adder b2 (NnY0, 1'b0, 1'b1, NnY0_plus1, Ncarry_to_nY1); //+1 RCA
+	BCD_Adder b2_2 (NnY1, 1'b0, Ncarry_to_nY1, NnY1_plus1, NS2); //+1 RCA
+	BCD_Adder b2_3 (NnY0_plus1, NX0, 1'b0, Nresult_pmp0, Ncarry_to_nY1_plus1_plusX1); //+A RCA
+	BCD_Adder b2_4 (NnY1_plus1, NX1, Ncarry_to_nY1_plus1_plusX1, Nresult_pmp1, Ncarry_to_S2); //+A RCA
+	BCD_Adder b2_5 (NS2, 1'b0, Ncarry_to_S2, Nresult_pmp2, Nuseless1); //+A RCA
+	//Pos - Neg and Neg - Pos
+	BCD_Adder b3 (Y0, X0, 1'b0, Y0_plusX0, carry_to_S1);
+	BCD_Adder b3_2 (Y1, X1, carry_to_S1, Y1_plusX1, carry_to_s2);
+	BCD_Adder b3_3 (1'b0, 1'b0, carry_to_s2, result_s2, useless2);
+	
+	always@(*)
+		begin
+			if (~SignofX & ~SignofY) //Pos - Pos
+				begin
+					if ((X1 > Y1) | (X1 == Y1) & (X0 > Y0) | (X1 == Y1 & X0 == Y0)) //X >= Y
+						begin
+							result_S0 = result_pmp0;
+							result_S1 = result_pmp1;
+							result_S2 = result_pmp2 - 1;
+							Signbit = 1'b0;
+						end
+					else if ((X1 < Y1) | (X1 == Y1) & (X0 < Y0)) //X < Y
+						begin
+							result_S0 = (100 - ((result_pmp1 * 10) + result_pmp0)) % 10;
+							result_S1 = ((100 - ((result_pmp1 * 10) + result_pmp0)) - (100 - ((result_pmp1 * 10) + result_pmp0)) % 10) / 10;
+							result_S2 = 0;
+							Signbit = 1'b1;
+						end
+				end
+			else if (SignofX & SignofY) //Neg - Neg
+				begin
+					if ((Y1 > X1) | (X1 == Y1) & (Y0 > X0) | (X1 == Y1 & X0 == Y0)) //X >= Y
+						begin
+							result_S0 = Nresult_pmp0;
+							result_S1 = Nresult_pmp1;
+							result_S2 = Nresult_pmp2 - 1;
+							Signbit = 1'b0;
+						end
+					else if ((Y1 < X1) | (X1 == Y1) & (Y0 < X0)) //X < Y
+						begin
+							result_S0 = (100 - ((Nresult_pmp1 * 10) + Nresult_pmp0)) % 10;
+							result_S1 = ((100 - ((Nresult_pmp1 * 10) + Nresult_pmp0)) - (100 - ((Nresult_pmp1 * 10) + Nresult_pmp0)) % 10) / 10;
+							result_S2 = 0;
+							Signbit = 1'b1;
+						end
+				end
+			else if (~SignofX & SignofY) //Pos - Neg
+				begin
+						result_S0 = Y0_plusX0;
+						result_S1 = Y1_plusX1;
+						result_S2 = result_s2;
+						Signbit = 1'b0;
+				end
+			else if (SignofX & ~SignofY) //Neg - Pos
+				begin
+						result_S0 = Y0_plusX0;
+						result_S1 = Y1_plusX1;
+						result_S2 = result_s2;
+						Signbit = 1'b1;
+				end
+		end
+endmodule
+module BCD_Adder(input [3:0]X, input [3:0]Y, input carryin, output reg [3:0]Result, output reg carryout);	
+	reg [4:0]result; //using a larger reg than output variable (it truncates and works)
+	always@(*)
+		begin
+			result = X + Y + carryin;
+			if (result > 10 | result == 10)
+				begin
+					{carryout, Result} = result + 6;
+				end
+			else
+				begin
+					Result = result;
+					carryout = 1'b0;
+				end
+		end
+endmodule 
