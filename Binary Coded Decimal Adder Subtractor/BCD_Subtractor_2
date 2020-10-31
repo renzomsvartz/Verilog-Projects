@@ -1,0 +1,131 @@
+module BCD_Subtractor_2(input [3:0]X, input [3:0]Y, input SignofX, input SignofY, output reg [3:0]result_S0, output reg [3:0]result_S1, output reg Signbit, output reg overflow);
+	wire [3:0]result_NmP_0;
+	wire [3:0]result_NmP_1;
+	wire [3:0]ResultPXPY;
+	wire [3:0]ResultNXNY;
+	reg [3:0]S0;
+	wire [3:0]S1;
+	wire [3:0]S0_plus1;
+	wire [3:0]S0_plus_X;
+	wire [3:0]carry_to_S1_from_S0_plus1_plusX;
+	wire [3:0]S1_plus_carry;
+	wire [3:0]useless;
+	reg [3:0]NX;
+	reg [3:0]NY;
+	reg [3:0]NS0;
+	wire [3:0]NS1;
+	wire [3:0]NS0_plus1;
+	wire [3:0]NS0_plus_X;
+	wire [3:0]Ncarry_to_S1_from_S0_plus1_plusX;
+	wire [3:0]NS1_plus_carry;
+	wire [3:0]Nuseless;
+	always@(*)
+		begin
+			overflow = (X > 9 | Y > 9) ? 1 : 0; //X > 9 or Y > 9 overflow
+			S0 = 9 - Y; //9 - Y
+			NX = Y;
+			NY = X;
+			NS0 = 9 - NY; //Y and X flipped
+		end
+	
+	generate
+		begin
+			BCD_Adder negminuspositive (X, Y, result_NmP_0, result_NmP_1);
+			
+			Comparator comparePXandPY (X, Y, ResultPXPY);
+			BCD_Adder PXPY1 (S0, 1'b1, S0_plus1, S1); //+1
+			BCD_Adder PXPY2 (X, S0_plus1, S0_plus_X, carry_to_S1_from_S0_plus1_plusX); //+A ripple carry adder
+			BCD_Adder PXPY2_2 (S1, carry_to_S1_from_S0_plus1_plusX, S1_plus_carry, useless); //+A ripple carry adder
+			
+			Comparator compareNXandNY (NX, NY, ResultNXNY); //Y and X flipped comparator
+			BCD_Adder NXNY1 (NS0, 1'b1, NS0_plus1, NS1); //+1
+			BCD_Adder NXNY2 (NX, NS0_plus1, NS0_plus_X, Ncarry_to_S1_from_S0_plus1_plusX); //+A ripple carry adder
+			BCD_Adder NXNY2_2 (NS1, Ncarry_to_S1_from_S0_plus1_plusX, NS1_plus_carry, Nuseless); //+A ripple carry adder
+		end
+	endgenerate
+
+	always@(*)
+		begin
+			if (SignofX & ~SignofY) // - - +
+				begin
+					result_S0 = result_NmP_0;
+					result_S1 = result_NmP_1;
+					Signbit = 1'b1;
+				end
+			else if (~SignofX & SignofY)//+ - -
+				begin
+					result_S0 = result_NmP_0;
+					result_S1 = result_NmP_1;
+					Signbit = 1'b0;
+				end
+			else if (~SignofX & ~SignofY) //+ - +
+				begin
+					if (~ResultPXPY)
+						begin
+							result_S0 = 10 - S0_plus_X;
+							result_S1 = S1_plus_carry;
+							Signbit = 1'b1;
+						end
+					else if (ResultPXPY) //compliment v2
+						begin
+							result_S0 = S0_plus_X;
+							result_S1 = S1_plus_carry - 1;
+							Signbit = 1'b0;
+						end
+				end
+			else if (SignofX & SignofY) // - - -
+				begin
+					if (~ResultNXNY)
+						begin
+							result_S0 = 10 - NS0_plus_X;
+							result_S1 = NS1_plus_carry;
+							Signbit = 1'b1;
+						end
+					else if (ResultNXNY)
+						begin
+							result_S0 = NS0_plus_X;
+							result_S1 = NS1_plus_carry - 1;
+							Signbit = 1'b0;
+						end
+				end
+		end
+endmodule
+
+module BCD_Adder(input [3:0]X, input [3:0]Y, output reg [3:0]S, output reg carry);	
+	always@(*)
+		begin
+			S = X + Y; //3 + 5 8 
+			if (S >= 10) //>=10
+				begin
+					{carry, S} = S + 6;
+				end
+			else if(S < 10)
+				begin
+					carry = 1'b0;
+				end
+		end
+endmodule 
+module Comparator(input [3:0]X, input [3:0]Y, output Result); //X >= Y (0) or X < Y (1)
+	reg [4:0]Yt;
+	reg [4:0]cX;
+	reg [4:0]cY;
+	reg [4:0]S;
+	reg [5:0]c;
+	integer i;
+	always@(*)
+	begin
+		cX = X;
+		cY = Y;
+		Yt = ~cY;
+		c[0] = 1'b1;
+		for (i = 0; i < 4; i = i + 1)
+		begin
+			S[i] = cX[i] + Yt[i] + c[i];
+			c[i+1] = ((cX[i] & Yt[i]) | (cX[i] & c[i]) | (Yt[i] & c[i]));
+		end
+	end
+	assign O = c[5] ^ c[4];
+	assign Z = !S;
+	assign N = S[4];
+	assign Result = O ^ N;
+endmodule 
