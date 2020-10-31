@@ -1,0 +1,52 @@
+//comparator created using X - Y
+//Three outputs: zero (Z), negative output so X < Y (N), and overflow (V)
+
+//X = Y
+//Z = 1
+
+//X < Y
+//X < Y when N is 1 and overflow is 0
+//(The limited range of numbers n bits can present can may can may produce bugs such as -8 - (+1) = 10111 when X < Y and N is 0. This is solved by cross checking with overflow...
+//...so if overflow is 1 then X < Y when N = 0)
+//and when overflow is 1 and N is 0
+//: N ^ V
+
+//X <= Y: Z + (N ^ V)
+
+//X > Y: !( Z + (N ^ V))
+
+//X >= Y: !(N ^ V)
+
+//overflow = 1 and N = 1 Happens with -4 + (-1) = 11011. Overflow c4 ^ c3 = 0 and N = 1 therefore N ^ V = 1 ^ 0 = 1.
+
+module Comparator (X, Y, output XisGreaterThanY, output XisLessThanY, output XisEqualtoY, output XisGreaterThanOrEqualToY, output XisLessThanOrEqualToY)
+	input [3:0]X, Y;
+	reg [3:0]invertedY;
+	output reg [3:0]S;
+	reg [4:0]C;
+	
+	C[0] = 1'b1;
+	
+	always@(X, Y)
+	begin
+		for(i = 0; i < 4; i = i + 1)
+			invertedY[i] = !Y[i];
+		for (i = 0; i < 4; i = i + 1)
+		begin
+			S[i] = X[i] + invertedY[i] + C[i];
+			C[i+1] = (X[i] & Y[i]) | (X[i] & C[i]) | (Y[i] & C[i]);
+		end
+	end
+	
+	assign Z = !S[0] & !S[1] & !S[2] & !S[3];
+	assign N = S[3];
+	assign overflow = C[4] ^ C[3];
+	
+	assign XisGreaterThanY = !Z & !(N ^ V);
+	assign XisLessThanY = N ^ V;
+	assign XisEqualtoY = Z
+	//assign XisGreaterThanOrEqualToY = Z | !(N ^ V);
+	assign XisGreaterThanOrEqualToY = !(N ^ V); //Z | !(N ^ V). anytime Z is 1 !(N ^ V)  is 1 so we can omit it. This is accepted because it works. Also we are looking for greater than or equal to and not only equal to.
+	assign XisLessThanOrEqualToY = Z | N ^ V;
+	
+endmodule 
