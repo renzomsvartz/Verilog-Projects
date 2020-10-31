@@ -1,0 +1,36 @@
+module ternaryFA(input[1:0]a, input [1:0]b, input carryin, output [1:0]s, output carryout);
+	wire [1:0]z1;
+	wire [1:0]S; //and, or, wire vectors
+	ternaryHA ha1 (a, b, z1, c1);
+	ternaryHA ha2 (carryin, z1, S, c2);
+	assign s = S;
+	assign carryout = c1 + c2;
+endmodule
+
+module ternaryHA(input[1:0]a, input [1:0]b, output [1:0]s, output carryout);
+	wire one;
+	wire two;
+	wire three;
+	wire four;
+	wire five;
+	wire six;
+	wire seven;
+	wire eight;
+	wire c;
+	wire S0;
+	wire S1;
+	and(one, a[1], b[1]);
+	and(two, a[1], b[0]);
+	and(three, a[0], b[1]);
+	or(c, one, two, three);
+	assign carryout = c;
+	and(four, a[0], b[0]);
+	and(five, a[1], ~b[1], ~b[0]);
+	and(six, ~a[1], ~a[0], b[1]);
+	or(S1, four, five, six);
+	assign s[1] = S1;
+	and(seven, a[0], ~b[1], ~b[0]);
+	and(eight, ~a[1], ~a[0], b[0]);
+	or(S0, one, seven, eight);
+	assign s[0] = S0;
+endmodule 
