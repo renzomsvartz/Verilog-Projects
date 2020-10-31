@@ -1,0 +1,421 @@
+/*Signed n bit multiplier with concatenation*/
+//module Test(input [n-1:0]multiplicand, input [n2-1:0]multiplier, output reg [(2 * n)-1:0]P, output reg [7:0]PP1, output reg [7:0]PP2, output reg [7:0]PP3, output reg [7:0]PP1_, output reg [7:0]PP2_, output reg [7:0]PP3_);
+//	parameter n = 4;
+//	parameter n2 = 4;
+//	integer i, j;
+//	reg [n-1:0]x;
+//	reg [n2-1:0]y;
+//	reg [n-1:0]a;
+//	reg [63:0]lowerorderbits;
+//	reg [n+1:0]AND1;
+//	reg [n:0]AND2;
+//	reg [31:0]register32bit;
+//	reg [63:0]register64bit;
+//	
+//	/*Multiply values*/
+//	always @(*)
+//	begin
+//		/*Handle negative multipliers*/
+//		x = (multiplier[n2-1] == 1'b1) ? ~multiplicand + 1'b1: multiplicand; 
+//      y = (multiplier[n2-1] == 1'b1) ? ~multiplier + 1'b1: multiplier;
+//		/*Handle negative multipliers*/
+//	
+//		for(j = 0; j < n2; j = j + 1)
+//		begin
+//			/*Here you AND every bit of the y with the i-th bit of x*/
+//			for(i = 0; i < n; i = i + 1)
+//			begin 
+//				a[i] = y[j] & x[i];
+//			end
+//			/*Here you AND every bit of the y with the i-th bit of x*/
+//			
+//			/*Partial Product adjusting*/
+//			if (j == 0)	
+//			begin	
+//				AND1 = {{2{a[n-1]}}, a};
+//			end
+//			else if (j > 0) 
+//			begin
+//				AND2 = {a[n-1], a};
+//			end
+//			/*Partial Product adjusting*/
+//			
+//			/*Addition of partial products*/
+//			if (j == 1)	
+//			begin
+//				lowerorderbits[0] = AND1[0];
+//				register32bit[n:0] = AND2 + AND1[n+1:1];
+//				if (j == 1)
+//				begin
+//					PP1 = register32bit;
+//				end
+//				register64bit = {register32bit[n], register32bit[n:0]};//^
+//				PP1_ = register64bit;
+//			end
+//			else if (j > 1) 
+//				begin
+//				lowerorderbits[j-1] = register64bit[0];
+//				register32bit[n:0] = AND2 + register64bit[n+1:1];
+//				if (j == 2)
+//				begin
+//					PP2 = register32bit;
+//				end
+//				else if (j == 3)
+//				begin
+//					PP3 = register32bit;
+//				end
+//				register64bit = {register32bit[n], register32bit[n:0]};
+//				if (j == 2)
+//				begin
+//					PP2_ = register64bit;
+//				end
+//				else if (j == 3)
+//				begin
+//					PP3_ = register64bit;
+//				end
+//			end
+//			/*Addition of partial products*/
+//			
+//			/*Produce Product*/
+//			if (n2 == 1)
+//			begin
+//				P = AND1;
+//			end
+//			else if (n2 > 1)
+//			begin
+//				P = {register64bit, lowerorderbits[n2-2:0]};
+//			end
+//			/*Produce Product*/
+//		end
+//	end
+//	/*Multiply values*/
+//	
+//endmodule 
+/*Signed n bit multiplier with concatenation*/
+
+
+
+
+/*Signed multiplier generate experiment with concatenation*/
+//module Test(input [n-1:0] x, input [n-1:0]y, output [(2 * n) - 1:0]p);
+//	parameter n = 4;
+//	genvar i;
+//		
+//	wire [n-1:0]s;
+//	
+//	wire [n+1:0]U;
+//	wire [n:0]T;
+//	
+//	wire [n:0]E;
+//	wire [n+1:0]g;
+//	
+//	wire [n:0]W;
+//	wire [n+1:0]h;
+//	
+//	wire [n:0]Q;
+//	wire [n+1:0]k;
+//	
+//	generate
+//		for(i = 0; i < n; i = i + 1)
+//		begin:multiplyvectors
+//		
+//			/*Here you AND every bit of the y with the i-th bit of x*/
+//			ANDvectors xandy (x[i], y, s);
+//			/*Here you AND every bit of the y with the i-th bit of x*/
+//			
+//			/*Partial Product adjusting*/
+//			if(i == 0) 
+//			begin
+//				assign U = {{2{s[n-1]}}, s}; 
+//			end
+//			else
+//			begin
+//				assign T = {s[n-1], s};
+//			end
+//			/*Partial Product adjusting*/
+//			
+//			/*Addition of partial products*/
+//			if (i == 1) 
+//			begin
+//				FA #(4) FA1 (T, U[n+1:1], E); 
+//				assign g = {E[n], E};
+//			end
+//			
+//			else if (i == 2) 
+//			begin
+//				FA #(4) FA2 (T, g[n+1:1], W);
+//				assign h = {W[n], W}; 
+//			end
+//			
+//			else if (i == 3) 
+//			begin
+//				FA #(4) FA3 (T, h[n+1:1], Q);
+//				assign k = {Q[n], Q}; 
+//			end
+//			/*Addition of partial products*/
+//		end
+//	endgenerate
+//	
+//	assign p = {k, h[0], g[0], U[0]};
+//
+//endmodule 
+/*Signed multiplier generate experiment with concatenation*/
+
+
+
+
+/*Signed multiplier generate experiment with concatenation*/
+//module Test(input [n-1:0]X, input [n2-1:0]Y, output reg [(2 * n) - 1:0]P);
+//	parameter n = 4;
+//	parameter n2 = 4;
+//	genvar i, j;
+//	
+//	reg [n-1:0]x;
+//	reg [n2-1:0]y;
+//	reg [n-1:0]a;
+//	reg [63:0]lowerorderbits;
+//	reg [n+1:0]AND1;
+//	reg [n:0]AND2;
+//	reg [31:0]register32bit;
+//	reg [63:0]register64bit;
+//
+//
+//	generate
+//			for (i = 0; i < n2; i = i + 1)
+//			begin:multiplyvectors
+//				if (i == 0)
+//				begin
+//					ANDvectors #(4) and1 (x[i] , y, a);
+//					AND1 = {{2{a[n-1]}}, a};
+//				end
+//				else if (i > 0)
+//				begin
+//					if (i == 1)
+//					begin
+//						loworderbits[0] = AND1[0];
+//						ANDvectors #(4) and2 (x[i] , y, a);
+//						AND2 = {a[n-1], a};
+//						FA #(4) PP1 (AND2, AND1[n+1:1], register32bit);
+//						register64bit = {register32bit[n], register32bit[n:0]};
+//					end
+//					else if (i > 1)
+//						begin
+//						loworderbits[i-1] = register64bit[0];
+//						ANDvectors and2 (a[i] , X[i], Y[i]);
+//						AND2 = {a[n-1], a};
+//						FA #(4) PP1 (AND2, register64bit[n+1:1], register32bit);
+//						register64bit = {register32bit[n], register32bit[n:0]};
+//					end
+//				end
+//			end
+//	endgenerate
+//
+//	
+//	/*Produce Product*/
+//	if (n2 == 1)
+//	begin
+//		P = AND1;
+//	end
+//	else if (n2 > 1)
+//	begin
+//		P = {register64bit, lowerorderbits[n2-2:0]};
+//	end
+//	/*Produce Product*/
+//
+//endmodule 
+//
+///*Module AND*/
+//module ANDvectors(input operator, input [n-1:0]operand, output reg [n-1:0]p);
+//	parameter n = 4;
+//	integer i;
+//	
+//	always@(*)
+//	begin
+//		for (i = 0; i < n; i = i + 1)
+//		begin
+//			p[i] = operator & operand[i];
+//		end
+//	end
+//endmodule 
+///*Module AND*/
+//
+///*Module FA*/
+//module FA(input [n-1:0]x, input [n-1:0]y, output s);
+//	parameter n = 4;
+//	assign s = x + y;
+//
+//endmodule 
+///*Module FA*/
+/*Signed multiplier generate experiment with concatenation*/
+
+
+
+/*-----------------------*/
+/*Signed multiplier experiment*/
+//module NM(input [n-1:0]x, input [n-1:0]y, output reg [(2*n)-1:0]p);
+//	parameter n = 5;
+//	integer i;
+//	integer j;
+//	reg [(2*n)-1:0]a; //bit vector for AND every bit of the y with the i-th bit of x
+//	reg [(2*n)-1:0]P; //bit vector for AND every bit of the y with the i-th bit of x
+//	
+//	always @(*)
+//	begin
+//		for (i = 0; i < n; i = i + 1)
+//		begin
+//			/*Here you AND every bit of the y with the i-th bit of x*/
+//			for(j = 0; j < n; j = j + 1)
+//			begin
+//				a[j] = x[i] & y[j];
+//			end
+//			/*Here you AND every bit of the y with the i-th bit of x*/
+//			
+//			/*Partial Product adjusting*/
+//			if (i == 0)
+//			begin
+//				a = {{2{a[n-1]}}, a[n-1:0]}; //Concern 2: the 2 is meant to be used as replication operator. The a[n-1:0] is meant to pick out which part of the bit vector I want to manipulate (adjust)
+//			end	
+//			else if (i > 0)
+//			begin
+//				P = {a[n-1], a[n-1:0]};
+//				//P = {P, {i{1'b0}}}; //P << i;
+//				P << i;
+//			end
+//			/*Partial Product adjusting*/
+//			
+//			/*Addition of partial products*/
+//			if (i <= 1)
+//			begin
+//				assign p = P + a;
+//				assign p = {p[n+1], p[n+1:0]};
+//			end
+//			else if (i > 0)
+//			begin
+//				assign p = p + P;
+//				assign p = {p[n+i], p[n+1:0]};
+//			end
+//			/*Addition of partial products*/
+//		end
+//	end
+//	
+//endmodule  
+/*Signed multiplier experiment*/
+
+/*Signed multiplier with concatenation*/
+//module M(input [n-1:0]X, input [n-1:0]Y, output [(2 * n)-1:0]P);
+//	parameter n = 4;
+//	integer i;
+//	integer j;
+//	
+//	reg [n-1:0]S;
+//	
+//	reg [n+1:0]U;
+//	reg [n:0]T;
+//	
+// reg [n:0]E;
+//	reg [n+1:0]g;
+//	
+//	reg [n:0]W;
+//	reg [n+1:0]h;
+//	
+//	reg [n:0]Q;
+//	reg [n+1:0]k;
+//	
+//	always @(*) //*
+//	begin
+//		for(j = 0; j < n; j = j + 1)
+//		begin
+//			/*Here you AND every bit of the y with the i-th bit of x*/
+//			for(i = 0; i < n; i = i + 1)
+//			begin 
+//				S[i] = X[j] & Y[i];
+//			end
+//			/*Here you AND every bit of the y with the i-th bit of x*/
+//			
+//			/*Partial Product adjusting*/
+//			if (j == 0)	
+//			begin	
+//				U = {{2{S[n-1]}}, S};
+//			end
+//			else if (j > 0) 
+//			begin
+//				T = {S[n-1], S};
+//			end
+//			/*Partial Product adjusting*/
+//			
+//			/*Addition of partial products*/
+//			if (j == 1)	
+//			begin			                                                                                                                                                    								                                                                                                                                                    	
+//				E[n:0] = T + U[n+1:1];
+//				g = {E[n], E};
+//			end
+//			else if (j == 2) 
+//				begin																	                                                                                                                                                    							                                                                                                                                                    				
+//				W[n:0] = T + g[n+1:1];
+//				h = {W[n], W};
+//			end
+//			else if (j == 3) 
+//			begin																			                                                                                                                             												                                                                                                                                                    							
+//				Q[n:0] = T + h[n+1:1];
+//				k = {Q[n], Q};
+//			end
+//			/*Addition of partial products*/
+//		end
+//	end
+//	
+//	assign P = {k, h[0], g[0], U[0]};
+//	
+//endmodule 
+/*Signed multiplier with concatenation*/
+
+/*Signed multiplier generate experiment with concatenation*/
+//module Test(input [n-1:0]multiplicand, input [n2-1:0]multiplier, output [(2*n)-1:0]p);
+//	parameter n = 4;
+//	parameter n2 = 4;
+//	genvar i;
+//	
+//	wire [n-1:0]x;
+//	wire [n2-1:0]y;
+//	
+//	assign x = (multiplier[n2-1] == 1'b1) ? ~multiplicand + 1'b1: multiplicand; 
+//   assign y = (multiplier[n2-1] == 1'b1) ? ~multiplier + 1'b1: multiplier;
+//	
+//	wire [n-1:0]m0;
+//	wire [n+1:0]m1;
+//	wire [63:0]lowerorderbits;
+//	
+//	assign m0 = x[0] && y;
+//	assign m1 = {{2{m0[n-1]}}, m0};
+//	
+//	assign C[0] = 1'b0;
+//	
+//	wire [n-1:0]m2;
+//	wire [n:0]m3;
+//	
+//	assign m2 = x[1] * y;
+//	assign m3 = {m2[n-1], m2};
+//	
+//	generate
+//		for (i = 1; i <= n2; i = i + 1)
+//		begin:multiplier_stage
+//			wire z1, z2, z3;
+//			xor(S[k-1], m1[i], m2[i-1], C[k-1]);
+//			and(z1, m1[i], m2[i-1]);	
+//			and(z2, m1[i], C[k-1]);	
+//			and(z3, m2[i-1], C[k-1]);	
+//			or (C[k], z1, z2, z3);
+//		end
+//	endgenerate	
+//	assign p = {m1, lowerorderbits[n2-2:0]};
+//endmodule
+/*Signed multiplier generate experiment with concatenation*/
+
+			/*
+			wire [n-1:0]m2;
+			wire [n:0]m3;
+			wire [n:0]PP;
+			assign lowerorderbits[i-1] = m1[0];
+			assign m2 = x[i] * y;
+			assign m3 = {m2[n-1], m2};
+			assign PP = m3 + m1[n+1:1];
+			assign m1 = {PP[n], PP[n:0]};*/
