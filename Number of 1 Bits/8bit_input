@@ -1,0 +1,25 @@
+module numberof1bits_eightbitinput(input [7:0]X, output [3:0]S);
+	FA FA1_1 (X[1], X[0], 1'b0, inputtoFA2_1_1, inputtoFA2_2_1);
+	FA FA1_2 (X[3], X[2], 1'b0, inputtoFA2_1_2, inputtoFA2_2_2);
+	FA FA1_3 (X[5], X[4], 1'b0, inputtoFA2_3_1, inputtoFA2_4_1);
+	FA FA1_4 (X[7], X[6], 1'b0, inputtoFA2_3_2, inputtoFA2_4_2);
+	
+	FA FA2_1 (inputtoFA2_1_1, inputtoFA2_1_2, 1'b0, inputtoFA3_1_1, carrytoFA2_2);
+	FA FA2_2 (inputtoFA2_2_1, inputtoFA2_2_2, carrytoFA2_2, inputtoFA3_2_1, inputtoFA3_3_1);
+	FA FA2_3 (inputtoFA2_3_1, inputtoFA2_3_2, 1'b0, inputtoFA3_1_2, carrytoFA2_4);
+	FA FA2_4 (inputtoFA2_4_1, inputtoFA2_4_2, carrytoFA2_4, inputtoFA3_2_2, inputtoFA3_3_2);
+	
+	FA FA3_1 (inputtoFA3_1_1, inputtoFA3_1_2, 1'b0, s0, carrytoFA3_2);
+	FA FA3_2 (inputtoFA3_2_1, inputtoFA3_2_2, carrytoFA3_2, s1, carrytoFA3_3);
+	FA FA3_3 (inputtoFA3_3_1, inputtoFA3_3_2, carrytoFA3_3, s2, s3);
+	
+	assign S[0] = s0;
+	assign S[1] = s1;
+	assign S[2] = s2;
+	assign S[3] = s3;
+endmodule
+
+module FA(input X, input Y, input carryin, output S, output carryout);
+	assign S = ((X ^ Y) ^ carryin);
+	assign carryout = X & Y | X & carryin | Y & carryin;
+endmodule 
